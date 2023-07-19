@@ -13,3 +13,4 @@ creating an streamlit web-application :-
 streamlit run app.py 
 
 for preview of project :-
+https://cricket-score-predictor-sanket1006.streamlit.app/
