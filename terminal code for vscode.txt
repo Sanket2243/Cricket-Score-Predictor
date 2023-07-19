@@ -1,0 +1,15 @@
+initiate conda :- 
+conda init
+
+activate base :-
+conda activate base
+
+install requirements :-
+pip install - r requirements.txt
+
+run data_transformation.py file
+
+creating an streamlit web-application :-
+streamlit run app.py 
+
+for preview of project :-
