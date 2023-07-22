@@ -2,10 +2,11 @@ import streamlit as st
 import pickle
 import pandas as pd
 import numpy as np
+from logger import logging
 import xgboost as xg
 from xgboost import XGBRegressor
 
-pipe = pickle.load(open('pipe.pkl','rb'))
+pipe = pickle.load(open('model.pkl','rb'))
 
 teams = ['Australia',
  'India',
@@ -54,8 +55,7 @@ cities = ['Colombo',
  'Christchurch',
  'Trinidad']
 
-st.title('Cricket Score Predictor')
-
+st.markdown("<h1 style='text-align: center; color:#FF5800;'> T20i Cricket Score Predictor </h1>", unsafe_allow_html=True)
 col1, col2 = st.columns(2)
 
 with col1:
@@ -85,3 +85,5 @@ if st.button('Predict Score'):
      {'batting_team': [batting_team], 'bowling_team': [bowling_team],'city':city, 'current_score': [current_score],'balls_left': [balls_left], 'wickets_left': [wickets], 'crr': [crr], 'last_five': [last_five]})
     result = pipe.predict(input_df)
     st.header("Predicted Score - " + str(int(result[0])))
+
+logging.info("Model ran successfully, score has been predicted.")

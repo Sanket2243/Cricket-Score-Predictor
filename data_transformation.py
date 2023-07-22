@@ -3,7 +3,9 @@ import pandas as pd
 import pickle
 from yaml import safe_load
 from tqdm import tqdm
+from logger import logging
 import os
+
 filenames = []
 for file in os.listdir('data'):
     filenames.append(os.path.join('data',file))
@@ -16,6 +18,11 @@ for file in tqdm(filenames):
         df['match_id'] = counter
         final_df =pd.concat([final_df,df])
         counter+=1
+
+logging.info("yaml files loaded successfully")
+ 
+ 
+logging.info("data transformation has been initiated")
 
 final_df.drop(columns=[
     'meta.data_version',
@@ -40,9 +47,8 @@ final_df.drop(columns=['info.gender'],inplace=True)
 final_df = final_df[final_df['info.overs'] == 20]
 final_df.drop(columns=['info.overs','info.match_type'],inplace=True)
 
-pickle.dump(final_df,open('dataset_level1.pkl','wb'))
-
-matches = pickle.load(open('dataset_level1.pkl','rb'))
+matches=pd.DataFrame()
+matches = pd.concat([matches ,final_df])
 
 count = 1
 delivery_df = pd.DataFrame()
@@ -114,11 +120,7 @@ teams = [
 delivery_df = delivery_df[delivery_df['batting_team'].isin(teams)]
 delivery_df = delivery_df[delivery_df['bowling_team'].isin(teams)]
 
-delivery_df
-output = delivery_df[['match_id','batting_team','bowling_team','ball','runs','player_dismissed','city','venue']]
-
-pickle.dump(output,open('dataset_level2.pkl','wb'))
-df = pickle.load(open('dataset_level2.pkl','rb'))
+df = delivery_df[['match_id','batting_team','bowling_team','ball','runs','player_dismissed','city','venue']]
 
 cities = np.where(df['city'].isnull(),df['venue'].str.split().apply(lambda x:x[0]),df['city'])
 df['city'] = cities
@@ -167,33 +169,7 @@ final_df=final_df[['batting_team','bowling_team','city','current_score','balls_l
 
 final_df.dropna(inplace=True)
 
-X = final_df.drop(columns=['runs_x'])
-y = final_df['runs_x']
+pickle.dump(final_df,open('data_transformation.pkl','wb'))
 
-from sklearn.model_selection import train_test_split
-X_train,X_test,y_train,y_test = train_test_split(X,y,test_size=0.3,random_state=1)
-
-from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
-from sklearn.ensemble import RandomForestRegressor
-from xgboost import XGBRegressor
-from sklearn.metrics import r2_score,mean_absolute_error
-
-trf = ColumnTransformer([
-    ('trf',OneHotEncoder(sparse=False,drop='first'),['batting_team','bowling_team','city'])]
-,remainder='passthrough')
-
-pipe = Pipeline(steps=[
-    ('step1',trf),
-    ('step2',StandardScaler()),
-    ('step3',XGBRegressor(n_estimators=1000,learning_rate=0.2,max_depth=12,random_state=1))
-])
-
-pipe.fit(X_train,y_train)
-y_pred = pipe.predict(X_test)
-print(r2_score(y_test,y_pred))
-print(mean_absolute_error(y_test,y_pred))
-
-pickle.dump(pipe,open('pipe.pkl','wb'))
+logging.info("data transformation has been completed")
+os.system('python model_trainer.py')
